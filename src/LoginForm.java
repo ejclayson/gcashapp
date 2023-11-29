@@ -14,6 +14,8 @@ public class LoginForm extends JDialog{
     private JPanel loginPanel;
     private JButton registerButton;
 
+    private User user;
+
     public LoginForm(JFrame parent){
         super(parent);
         setContentPane(loginPanel);
@@ -32,11 +34,12 @@ public class LoginForm extends JDialog{
                 user = getAuthenticatedUser(mobile, pin);
 
                 if(user != null){
-                    dispose();
-                    loginPanel.setVisible(false);
+
                     if(e.getSource()==btnOk){
-                        DashboardForm myDashboardForm = new DashboardForm();
+                        DashboardForm myDashboardForm = new DashboardForm(user.name);
                         myDashboardForm.setVisible(true);
+                        dispose();
+                        loginPanel.setVisible(false);
                     }
 
                 }else{
@@ -68,7 +71,7 @@ public class LoginForm extends JDialog{
         setVisible(true);
     }
 
-    public User user;
+//    public User user;
 
     private User getAuthenticatedUser(String mobile, String pin){
         User user = null;

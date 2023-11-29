@@ -83,7 +83,7 @@
         </constraints>
         <properties>
           <font name="Roboto Black" size="18" style="1"/>
-          <text value="Ok"/>
+          <text value="Login"/>
         </properties>
       </component>
       <component id="67e9e" class="javax.swing.JButton" binding="btnCancel">
