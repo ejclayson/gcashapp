@@ -103,7 +103,7 @@ public class LoginForm extends JDialog{
         }
         return user;
 
-        }
+    }
 
     public static void main(String[] args) {
         LoginForm loginForm = new LoginForm(null);
@@ -120,6 +120,3 @@ public class LoginForm extends JDialog{
     }
 
 }
-
-
-

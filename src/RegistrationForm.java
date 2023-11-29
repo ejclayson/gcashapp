@@ -26,8 +26,6 @@ public class RegistrationForm extends JDialog{
         setModal(true);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
-
         btnRegister.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -77,8 +75,6 @@ public class RegistrationForm extends JDialog{
         if(user != null){
             dispose();
         }
-
-
     }
 
     public User user;
@@ -114,9 +110,7 @@ public class RegistrationForm extends JDialog{
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return user;
-
     }
 
     public static void main(String[] args) {
@@ -128,5 +122,4 @@ public class RegistrationForm extends JDialog{
             System.out.println("Registration cancelled");
         }
     }
-
     }
