@@ -2,10 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.sql.*;
 
 public class RegistrationForm extends JDialog{
     private JTextField txtFldName;
@@ -17,6 +14,7 @@ public class RegistrationForm extends JDialog{
     private JButton btnCancel;
     private JPanel registerPanel;
     private JButton btnLogin;
+    private JTextField txtFldLName;
 
     public RegistrationForm(JFrame parent){
         super(parent);
@@ -24,8 +22,11 @@ public class RegistrationForm extends JDialog{
         setContentPane(registerPanel);
         setMinimumSize(new Dimension(450, 474));
         setModal(true);
-        setLocationRelativeTo(parent);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+//        LoginForm myLoginForm = new LoginForm(null);
+//        myLoginForm.setVisible(false);
+
         btnRegister.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -36,6 +37,8 @@ public class RegistrationForm extends JDialog{
         btnCancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+                registerPanel.setVisible(false);
                 dispose();
             }
         });
@@ -44,10 +47,10 @@ public class RegistrationForm extends JDialog{
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(e.getSource()==btnLogin){
-                    LoginForm myLoginForm = new LoginForm(null);
-                    myLoginForm.setVisible(true);
                     registerPanel.setVisible(false);
                     dispose();
+                    LoginForm myLoginForm = new LoginForm(null);
+                    myLoginForm.setVisible(true);
                 }
             }
         });
@@ -55,13 +58,17 @@ public class RegistrationForm extends JDialog{
     }
 
     private void registerUser(){
-        String name = txtFldName.getText();
+        String fName = txtFldName.getText();
+        String lName = txtFldLName.getText();
+        //name.substring(0,1).toUpperCase();
         String email = txtFldEmail.getText();
         String mobile = txtFldMobile.getText();
         String pin = String.valueOf(pwdFldPin.getPassword());
         String confirmPin = String.valueOf(pwdFldConfirmPin.getPassword());
+        String emailPattern = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+                + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 
-        if(name.isEmpty() || email.isEmpty() || mobile.isEmpty() || pin.isEmpty() || confirmPin.isEmpty()){
+        if(fName.isEmpty() || lName.isEmpty() || email.isEmpty() || mobile.isEmpty() || pin.isEmpty() || confirmPin.isEmpty()){
             JOptionPane.showMessageDialog(this, "Please enter all fields", "Try again", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -71,6 +78,38 @@ public class RegistrationForm extends JDialog{
             return;
         }
 
+        if(!fName.toLowerCase().matches("[a-z]+")){
+            JOptionPane.showMessageDialog(this,"First Name must contain valid letters only", "Try again", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if(!lName.toLowerCase().matches("[a-z]+")){
+            JOptionPane.showMessageDialog(this,"Last Name must contain valid letters only", "Try again", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if(!email.matches(emailPattern)){
+            JOptionPane.showMessageDialog(this,"Email is not valid", "Try again", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if(mobile.toLowerCase().matches("[a-z]+")){
+            JOptionPane.showMessageDialog(this,"Mobile must contain valid numbers only", "Try again", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if(mobile.length()>9){
+            JOptionPane.showMessageDialog(this,"Mobile requires nine(9) valid set of numbers", "Try again", JOptionPane.ERROR_MESSAGE);
+        }
+
+        if(pin.toLowerCase().matches("[a-z]+")){
+            JOptionPane.showMessageDialog(this,"Pin must contain valid numbers only", "Try again", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if(pin.length()!=4){
+            JOptionPane.showMessageDialog(this,"Pin requires four(4) digits only", "Try again", JOptionPane.ERROR_MESSAGE);
+        }
+        String name = fName.substring(0,1).toUpperCase()+" "+lName.substring(0,1).toUpperCase();
         user = addUserToDatabase(name, email, mobile, pin);
         if(user != null){
             dispose();
@@ -80,11 +119,35 @@ public class RegistrationForm extends JDialog{
     public User user;
     private User addUserToDatabase(String name, String email, String mobile, String pin) {
         User user = null;
-        final String DB_URL = "jdbc:mysql://localhost:3306/gcashapp";
-        final String USERNAME = "root";
-        final String PASSWORD = "";
+        final String DB_URL = "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12666768";
+        final String USERNAME = "sql12666768";
+        final String PASSWORD = "YxDac3ZBu9";
+
+      /**  try{
+            Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT * FROM users WHERE name=? AND email=? AND mobile=?";
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, email);
+            preparedStatement.setString(3, mobile);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                user = new User();
+                user.name = resultSet.getString("name");
+                user.email = resultSet.getString("email");
+                user.mobile = resultSet.getString("mobile");
+                user.pin = resultSet.getString("pin");
+            }
+
+//            JOptionPane.showMessageDialog(this,"Pin requires four(4) digits only", "Try again", JOptionPane.ERROR_MESSAGE);
+        }catch (Exception e){
+            e.printStackTrace();
+        } **/
 
         try {
+            mobile = "09" + mobile;
             Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
 
             Statement stmt = conn.createStatement();
@@ -104,7 +167,10 @@ public class RegistrationForm extends JDialog{
                 user.mobile = mobile;
                 user.pin = pin;
             }
-
+            JOptionPane.showMessageDialog(null, "Registration Success! \nDetails registered are:\nName: " + user.name + "\nEmail: " +user.email+"\nMobile: " + user.mobile);
+            registerPanel.setVisible(false);
+            dispose();
+            RegistrationForm myform2 = new RegistrationForm(null);
             stmt.close();
             conn.close();
         } catch (Exception e) {

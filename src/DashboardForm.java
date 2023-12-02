@@ -22,8 +22,9 @@ public class DashboardForm extends JFrame{
         setTitle("Dashboard");
         setContentPane(dashboardPanel);
         setMinimumSize(new Dimension(500, 429));
-        setSize(1200,700);
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        //setSize(1200,700);
+        setSize(450,474);
+        setDefaultCloseOperation(JDialog.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
 
@@ -33,49 +34,28 @@ public class DashboardForm extends JFrame{
         });
 
 
-//
-//        Connection con;
-//        PreparedStatement pst;
-//
-//        private void connect(){
-//            try {
-//                Class.forName("com.mysql.jdbc.Driver");
-//                con = DriverManager.getConnection("jdbc:mysql://localhost/rbcompany", "root","");
-//                System.out.println("Successs");
-//            }
-//            catch (ClassNotFoundException ex)
-//            {
-//                ex.printStackTrace();
-//
-//            }
-//            catch (SQLException ex)
-//            {
-//                ex.printStackTrace();
-//            }
-//        }
-
-
         changePinButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String m = JOptionPane.showInputDialog("Please input new pin?");
-                final String DB_URL = "jdbc:mysql://localhost:3306/gcashapp";
-                final String USERNAME = "root";
-                final String PASSWORD = "";
+                final String DB_URL = "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12666768";
+                final String USERNAME = "sql12666768";
+                final String PASSWORD = "YxDac3ZBu9";
 
                 try(Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
-                    //Statement stmt = conn.createStatement();
 
                     PreparedStatement preparedStatement = conn.prepareStatement("update users set pin = ? where name = ?");
-                    //preparedStatement = conn.prepareStatement("update users set pin = ? where name = ?");
                     preparedStatement.setString(1, m);
                     preparedStatement.setString(2, name);
                     preparedStatement.executeUpdate();
-
+                    JOptionPane.showMessageDialog(null, "Pin is now updated to " + m + "\nYou'll now be logout");
+                    dashboardPanel.setVisible(false);
+                    dispose();
+                    LoginForm myLoginForm = new LoginForm(null);
+                    myLoginForm.setVisible(true);
                 }catch (SQLException e1){
                     e1.printStackTrace();
                 }
-
             }
         });
 
@@ -83,6 +63,7 @@ public class DashboardForm extends JFrame{
         logoutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                System.exit(0);
                 dispose();
             }
         });

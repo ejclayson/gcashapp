@@ -21,8 +21,8 @@ public class LoginForm extends JDialog{
         setContentPane(loginPanel);
         setMinimumSize(new Dimension(450,474));
         setModal(true);
-        setLocationRelativeTo(parent);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
 
         btnOk.addActionListener(new ActionListener() {
@@ -36,12 +36,12 @@ public class LoginForm extends JDialog{
                 if(user != null){
 
                     if(e.getSource()==btnOk){
+                        loginPanel.setVisible(false);
+
+                        dispose();
                         DashboardForm myDashboardForm = new DashboardForm(user.name);
                         myDashboardForm.setVisible(true);
-                        dispose();
-                        loginPanel.setVisible(false);
                     }
-
                 }else{
                     JOptionPane.showMessageDialog(LoginForm.this, "Mobile or Pin Invalid", "Try again", JOptionPane.ERROR_MESSAGE);
                 }
@@ -51,6 +51,7 @@ public class LoginForm extends JDialog{
         btnCancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                System.exit(0);
                 dispose();
             }
         });
@@ -61,10 +62,10 @@ public class LoginForm extends JDialog{
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(e.getSource()==registerButton){
-                    RegistrationForm myRegistrationForm = new RegistrationForm(null);
-                    myRegistrationForm.setVisible(true);
                     loginPanel.setVisible(false);
                     dispose();
+                    RegistrationForm myRegistrationForm = new RegistrationForm(null);
+                    myRegistrationForm.setVisible(true);
                 }
             }
         });
@@ -76,9 +77,9 @@ public class LoginForm extends JDialog{
     private User getAuthenticatedUser(String mobile, String pin){
         User user = null;
 
-        final String DB_URL = "jdbc:mysql://localhost:3306/gcashapp";
-        final String USERNAME = "root";
-        final String PASSWORD = "";
+        final String DB_URL = "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12666768";
+        final String USERNAME = "sql12666768";
+        final String PASSWORD = "YxDac3ZBu9";
 
         try {
             Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
@@ -88,9 +89,7 @@ public class LoginForm extends JDialog{
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setString(1, mobile);
             preparedStatement.setString(2, pin);
-
             ResultSet resultSet = preparedStatement.executeQuery();
-
             if (resultSet.next()) {
                 user = new User();
                 user.name = resultSet.getString("name");
