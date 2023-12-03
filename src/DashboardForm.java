@@ -63,8 +63,12 @@ public class DashboardForm extends JFrame{
         logoutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.exit(0);
+                //System.exit(0);
+                //dispose();
+                dashboardPanel.setVisible(false);
                 dispose();
+                LoginForm myLoginForm = new LoginForm(null);
+                myLoginForm.setVisible(true);
             }
         });
     }

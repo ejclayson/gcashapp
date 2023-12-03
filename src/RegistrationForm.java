@@ -20,7 +20,7 @@ public class RegistrationForm extends JDialog{
         super(parent);
         setTitle("Create a new account");
         setContentPane(registerPanel);
-        setMinimumSize(new Dimension(450, 474));
+        setMinimumSize(new Dimension(450, 550));
         setModal(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -113,6 +113,8 @@ public class RegistrationForm extends JDialog{
         user = addUserToDatabase(name, email, mobile, pin);
         if(user != null){
             dispose();
+        }else {
+            JOptionPane.showMessageDialog(this,"Name and/or Email and/or Mobile already registered\nPlease register another Name, Email, and Mobile.", "Try again", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -127,56 +129,47 @@ public class RegistrationForm extends JDialog{
          Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
 
          Statement stmt = conn.createStatement();
-         String sql = "SELECT * FROM users WHERE name=? AND email=? AND mobile=?";
+         String sql = "SELECT name, email, mobile FROM users WHERE name=? AND email=? AND mobile=?";
          PreparedStatement preparedStatement = conn.prepareStatement(sql);
          preparedStatement.setString(1, name);
          preparedStatement.setString(2, email);
          preparedStatement.setString(3, mobile);
          ResultSet resultSet = preparedStatement.executeQuery();
-         if (resultSet.next()==true) {
-//         user = new User();
-//         user.name = resultSet.getString("name");
-//         user.email = resultSet.getString("email");
-//         user.mobile = resultSet.getString("mobile");
-//         user.pin = resultSet.getString("pin");
-             try {
-                 mobile = "09" + mobile;
-                 //Connection conn2 = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
 
-                 Statement stmt2 = conn.createStatement();
-                 String sql2 = "INSERT INTO users (name, email, mobile, pin)" + "VALUES (?, ?, ?, ?)";
-
-                 PreparedStatement preparedStatement2 = conn.prepareStatement(sql2);
-                 preparedStatement2.setString(1, name);
-                 preparedStatement2.setString(2, email);
-                 preparedStatement2.setString(3, mobile);
-                 preparedStatement2.setString(4, pin);
-
-                 int addedRows = preparedStatement2.executeUpdate();
-                 if (addedRows > 0) {
-                     user = new User();
-                     user.name = name;
-                     user.email = email;
-                     user.mobile = mobile;
-                     user.pin = pin;
-                 }
-                 JOptionPane.showMessageDialog(null, "Registration Success! \nDetails registered are:\nName: " + user.name + "\nEmail: " +user.email+"\nMobile: " + user.mobile);
-                 registerPanel.setVisible(false);
-                 dispose();
-                 RegistrationForm myform2 = new RegistrationForm(null);
-                 stmt.close();
-                 conn.close();
-             } catch (Exception e) {
-                 e.printStackTrace();
-             }
+     if (resultSet.next()) {
+         JOptionPane.showMessageDialog(this,"Name and/or Email and/or Mobile already registered\nPlease register another Name, Email, and Mobile.", "Try again", JOptionPane.ERROR_MESSAGE);
          }else{
-             JOptionPane.showMessageDialog(this,"Name and/or Email and/or Mobile already registered\nPlease register Name,Email, and Mobile\nwhich is not yet registered. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
-         }
-         }catch (Exception e){
-         e.printStackTrace();
+         try {
+             mobile = "09" + mobile;
+             Statement stmt2 = conn.createStatement();
+             String sql2 = "INSERT INTO users (name, email, mobile, pin)" + "VALUES (?, ?, ?, ?)";
+             PreparedStatement preparedStatement2 = conn.prepareStatement(sql2);
+             preparedStatement2.setString(1, name);
+             preparedStatement2.setString(2, email);
+             preparedStatement2.setString(3, mobile);
+             preparedStatement2.setString(4, pin);
+             int addedRows = preparedStatement2.executeUpdate();
+             if (addedRows > 0) {
+                 user = new User();
+                 user.name = name;
+                 user.email = email;
+                 user.mobile = mobile;
+                 user.pin = pin;
+             }
+             JOptionPane.showMessageDialog(null, "Registration Success! \nDetails registered are:\nName: " + user.name + "\nEmail: " +user.email+"\nMobile: " + user.mobile);
+             registerPanel.setVisible(false);
+             dispose();
+             RegistrationForm myform2 = new RegistrationForm(null);
+             stmt.close();
+             conn.close();
+         } catch (Exception e) {
+             e.printStackTrace();
          }
 
-
+         }
+         }catch (SQLException ex){
+         ex.printStackTrace();
+         }
         return user;
     }
 

@@ -90,6 +90,7 @@ public class LoginForm extends JDialog{
             preparedStatement.setString(1, mobile);
             preparedStatement.setString(2, pin);
             ResultSet resultSet = preparedStatement.executeQuery();
+            //System.out.println(resultSet.next());
             if (resultSet.next()) {
                 user = new User();
                 user.name = resultSet.getString("name");
