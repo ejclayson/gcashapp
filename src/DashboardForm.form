@@ -97,16 +97,6 @@
           <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
         </constraints>
       </vspacer>
-      <component id="b2842" class="javax.swing.JButton" binding="cashTransferButton" default-binding="true">
-        <constraints>
-          <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <font name="Roboto Black" size="18" style="1"/>
-          <foreground color="-12828863"/>
-          <text value="Cash Transfer"/>
-        </properties>
-      </component>
       <component id="2f367" class="javax.swing.JButton" binding="cashInButton" default-binding="true">
         <constraints>
           <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
@@ -117,6 +107,20 @@
           <text value="Cash In"/>
         </properties>
       </component>
+      <component id="fb7e4" class="javax.swing.JButton" binding="cashTransferButton" default-binding="true">
+        <constraints>
+          <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="Roboto Black" size="18" style="1"/>
+          <text value="Cash Transfer"/>
+        </properties>
+      </component>
+      <vspacer id="e3c1a">
+        <constraints>
+          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </vspacer>
     </children>
   </grid>
 </form>

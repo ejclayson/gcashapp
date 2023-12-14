@@ -94,7 +94,7 @@ public class RegistrationForm extends JDialog{
             return;
         }
 
-        if(mobile.length()>9){
+        if(mobile.length()!=9){
             JOptionPane.showMessageDialog(this,"Mobile requires nine(9) valid set of numbers", "Try again", JOptionPane.ERROR_MESSAGE);
             return;
         }

@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.xml.transform.Result;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,6 +14,7 @@ public class DashboardForm extends JFrame{
     private JButton changePinButton;
     private JLabel lblAmount;
     private JButton cashInButton;
+    private JButton cashTransferButton;
 
     private String name;
 
@@ -23,7 +25,6 @@ public class DashboardForm extends JFrame{
         setTitle("Dashboard");
         setContentPane(dashboardPanel);
         setMinimumSize(new Dimension(500, 429));
-        //setSize(1200,700);
         setSize(450,474);
         setDefaultCloseOperation(JDialog.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -31,11 +32,7 @@ public class DashboardForm extends JFrame{
 
         SwingUtilities.invokeLater(()->{
             boolean hasRegisteredUser = connectToDatabase();
-            boolean hasRegisteredBalance = checkBalance();
-            //boolean hasRegisteredBalance = checkBalance();
-//            CheckBalance();
             lblName.setText("Hello! " + name);
-            //lblAmount.setText("Your current balance is: Php ");
         });
 
 
@@ -114,6 +111,7 @@ public class DashboardForm extends JFrame{
                                         ResultSet rs3 = ps2.executeQuery();
                                         if(rs3.next()){
                                             String amount = rs3.getString(1);
+                                            JOptionPane.showMessageDialog(null, "Your current balance is: Php " + amount);
                                             lblAmount.setText("Your current balance is: Php " + amount);
                                         }
                                     }
@@ -144,90 +142,233 @@ public class DashboardForm extends JFrame{
             }
         });
 
-    }
+        cashTransferButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final String DB_URL = "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12666768";
+                final String USERNAME = "sql12666768";
+                final String PASSWORD = "YxDac3ZBu9";
+
+                String mobile = JOptionPane.showInputDialog("Please input mobile where to transfer cash:");
+
+                if(!mobile.toString().matches("^\\d+$")){
+                    JOptionPane.showMessageDialog(null,"Mobile must contain valid numbers only. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if(mobile.length()!=11){
+                    JOptionPane.showMessageDialog(null,"Mobile requires nine(9) valid set of numbers. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
 
-    private boolean checkBalance() {
-        //String name = txtFldName.getText();
-        boolean hasRegisteredBalance = false;
-        final String DB_URL = "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12666768";
-        final String USERNAME = "sql12666768";
-        final String PASSWORD = "YxDac3ZBu9";
-        try(Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
-            PreparedStatement pst = conn.prepareStatement("SELECT id FROM users WHERE name=?");
-            pst.setString(1, name);
-            ResultSet rs = pst.executeQuery();
-            if(rs.next()){
-                String userId = rs.getString(1);
-                try(Connection con = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
-                    PreparedStatement ps = con.prepareStatement("insert into balance(amount,user_id) values (?,?)");
-                    ps.setString(1, "0");
-                    ps.setString(2,userId);
-                    ps.executeUpdate();
-                    try(Connection con2 = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
-                        PreparedStatement ps2 = con2.prepareStatement("select amount from balance where user_id=?");
-                        ps2.setString(1,userId);
-                        ResultSet rs2 = ps2.executeQuery();
-                        if(rs2.next()){
-                            String amount = rs2.getString(1);
-                            lblAmount.setText("Your current balance is: Php " + amount);
-                        }
-                    }
-                }catch (SQLException e){
-                    if (e.getErrorCode() == 1062) {
-                        try(Connection con2 = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
-                            PreparedStatement ps2 = con2.prepareStatement("select amount from balance where user_id=?");
-                            ps2.setString(1,userId);
-                            ResultSet rs2 = ps2.executeQuery();
-                            if(rs2.next()){
-                                String amount = rs2.getString(1);
-                                lblAmount.setText("Your current balance is: Php " + amount);
+                try(Connection conToCheckIfReceiverMobileIsSameWithSender = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                    PreparedStatement psToCheckIfReceiverMobileIsSameWithSender = conToCheckIfReceiverMobileIsSameWithSender.prepareStatement("SELECT mobile FROM users WHERE name=?");
+                    psToCheckIfReceiverMobileIsSameWithSender.setString(1,name);
+                    ResultSet rsToCheckIfReceiverMobileIsSameWithSender = psToCheckIfReceiverMobileIsSameWithSender.executeQuery();
+                    if(rsToCheckIfReceiverMobileIsSameWithSender.next()){
+                        String mobileOfSender = rsToCheckIfReceiverMobileIsSameWithSender.getString(1);
+                        if(!mobile.toString().matches(mobileOfSender)){
+                            try(Connection conToQueryIfMobileOfReceiverExists = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                PreparedStatement psQueryMobileOfReceiverIfExisting = conToQueryIfMobileOfReceiverExists.prepareStatement("SELECT mobile FROM users WHERE mobile=?");
+                                psQueryMobileOfReceiverIfExisting.setString(1,mobile);
+                                ResultSet rsToQueryMobileOfReceiverIfExisting = psQueryMobileOfReceiverIfExisting.executeQuery();
+                                if(rsToQueryMobileOfReceiverIfExisting.next()){
+                                    String mobileOfReceiver = rsToQueryMobileOfReceiverIfExisting.getString(1);
+
+                                    String amount = JOptionPane.showInputDialog("Please input cash amount that will be transferred:\n(If the desired amount doesn't contain cents then\nkindly add .00 at the end. Thanks)");
+
+                                    if(!amount.toString().matches("^[\\+\\-]{0,1}[0-9]+[\\.\\,][0-9]+$")){
+                                        JOptionPane.showMessageDialog(null,"Please input a valid number for the cash amount. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
+                                        return;
+                                    }
+
+                                    if(Double.parseDouble(amount)<=100.00){
+                                        JOptionPane.showMessageDialog(null,"Please input a valid number higher than 100 for amount. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
+                                        return;
+                                    }
+
+                                    try(Connection conToQueryIdOfSender = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                        PreparedStatement psQueryIdOfSender = conToQueryIdOfSender.prepareStatement("SELECT id FROM users WHERE name=?");
+                                        psQueryIdOfSender.setString(1,name);
+                                        ResultSet rsToQueryIdOfSender = psQueryIdOfSender.executeQuery();
+                                        if(rsToQueryIdOfSender.next()){
+                                            int idOfSender = rsToQueryIdOfSender.getInt(1);
+                                            try(Connection conToQueryBalanceAmountOfSender = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                                PreparedStatement psToQueryBalanceAmountOfSender = conToQueryBalanceAmountOfSender.prepareStatement("SELECT amount FROM balance WHERE user_id=?");
+                                                psToQueryBalanceAmountOfSender.setInt(1,idOfSender);
+                                                ResultSet rsToQueryBalanceAmountOfSender = psToQueryBalanceAmountOfSender.executeQuery();
+                                                if(rsToQueryBalanceAmountOfSender.next()){
+                                                    double balanceAmountOfSender = rsToQueryBalanceAmountOfSender.getDouble(1);
+                                                    if(balanceAmountOfSender>Double.parseDouble(amount)){
+                                                        try(Connection conToDeductTransferAmountToBalanceAmountOFSender = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                                            PreparedStatement psQueryToDeductTransferAmountToBalanceAmountOFSender = conToDeductTransferAmountToBalanceAmountOFSender.prepareStatement("UPDATE balance SET amount = ? where user_id = ?");
+                                                            psQueryToDeductTransferAmountToBalanceAmountOFSender.setDouble(1,balanceAmountOfSender-Double.parseDouble(amount));
+                                                            psQueryToDeductTransferAmountToBalanceAmountOFSender.setInt(2, idOfSender);
+                                                            psQueryToDeductTransferAmountToBalanceAmountOFSender.executeUpdate();
+                                                            try(Connection conToQueryIdOfReceiver = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                                                PreparedStatement psQueryIdOfReceiver = conToQueryIdOfReceiver.prepareStatement("SELECT id FROM users WHERE mobile=?");
+                                                                psQueryIdOfReceiver.setString(1,mobile);
+                                                                ResultSet rsToQueryIdOfReceiver = psQueryIdOfReceiver.executeQuery();
+                                                                if(rsToQueryIdOfReceiver.next()){
+                                                                    int idOfReceiver = rsToQueryIdOfReceiver.getInt(1);
+                                                                    try(Connection conToQueryBalanceAmountOfReceiver = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                                                        PreparedStatement psQueryBalanceAmountOfReceiver = conToQueryBalanceAmountOfReceiver.prepareStatement("SELECT amount FROM balance WHERE user_id=?");
+                                                                        psQueryBalanceAmountOfReceiver.setInt(1,idOfReceiver);
+                                                                        ResultSet rsToQueryBalanceAmountOfReceiver = psQueryBalanceAmountOfReceiver.executeQuery();
+                                                                        if(rsToQueryBalanceAmountOfReceiver.next()){
+                                                                            double balanceAmountOfReceiver = rsToQueryBalanceAmountOfReceiver.getDouble(1);
+                                                                            try(Connection conToAddTransferAmountToBalanceAmountOfReceiver = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                                                                PreparedStatement psToAddTransferAmountToBalanceAmountOfReceiver = conToAddTransferAmountToBalanceAmountOfReceiver.prepareStatement("UPDATE balance SET amount = ? WHERE user_id = ?");
+                                                                                psToAddTransferAmountToBalanceAmountOfReceiver.setDouble(1,balanceAmountOfReceiver + Double.parseDouble(amount));
+                                                                                psToAddTransferAmountToBalanceAmountOfReceiver.setInt(2,idOfReceiver);
+                                                                                psToAddTransferAmountToBalanceAmountOfReceiver.executeUpdate();
+                                                                                try(Connection conToQueryNameOfReceiver = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                                                                    PreparedStatement psQueryNameOfReceiver = conToQueryNameOfReceiver.prepareStatement("SELECT name FROM users WHERE mobile=?");
+                                                                                    psQueryNameOfReceiver.setString(1,mobileOfReceiver);
+                                                                                    ResultSet rsQueryNameOfReciever = psQueryNameOfReceiver.executeQuery();
+                                                                                    if(rsQueryNameOfReciever.next()){
+                                                                                        String nameOfReceiver = rsQueryNameOfReciever.getString(1);
+                                                                                        try(Connection conToInsertThisTransactionToTransactionTable = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                                                                            PreparedStatement psToInsertThisTransactionToTransactionTable = conToInsertThisTransactionToTransactionTable.prepareStatement("INSERT INTO transaction(amount,name,account_id,date,transfertoid,transferfromid) values (?,?,?,?,?,?)");
+                                                                                            psToInsertThisTransactionToTransactionTable.setDouble(1, Double.parseDouble(amount));
+                                                                                            psToInsertThisTransactionToTransactionTable.setString(2,nameOfReceiver);
+                                                                                            psToInsertThisTransactionToTransactionTable.setInt(3,idOfReceiver);
+                                                                                            psToInsertThisTransactionToTransactionTable.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+                                                                                            psToInsertThisTransactionToTransactionTable.setInt(5,idOfReceiver);
+                                                                                            psToInsertThisTransactionToTransactionTable.setInt(6,idOfSender);
+                                                                                            psToInsertThisTransactionToTransactionTable.executeUpdate();
+                                                                                            try(Connection conToGetUserId = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                                                                                PreparedStatement psQueryToGetUserId = conToGetUserId.prepareStatement("SELECT id FROM users WHERE name=?");
+                                                                                                psQueryToGetUserId.setString(1,name);
+                                                                                                ResultSet rsToGetUserId = psQueryToGetUserId.executeQuery();
+                                                                                                if(rsToGetUserId.next()){
+                                                                                                    int userId = rsToGetUserId.getInt(1);
+                                                                                                    try(Connection conToGetAmountFromBalanceOfUser = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                                                                                        PreparedStatement psQueryToGetAmountFromBalanceOfUser = conToGetAmountFromBalanceOfUser.prepareStatement("SELECT amount FROM balance WHERE user_id=?");
+                                                                                                        psQueryToGetAmountFromBalanceOfUser.setInt(1, userId);
+                                                                                                        ResultSet rsToGetAmountFromBalanceOfUser = psQueryToGetAmountFromBalanceOfUser.executeQuery();
+                                                                                                        if(rsToGetAmountFromBalanceOfUser.next()){
+                                                                                                            double amountAfterTransferCash = rsToGetAmountFromBalanceOfUser.getDouble(1);
+                                                                                                            //update this
+                                                                                                            try(Connection conToGetTime = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                                                                                                                PreparedStatement psQueryTime = conToGetTime.prepareStatement("SELECT MAX(date) FROM transaction WHERE name=?");
+                                                                                                                psQueryTime.setString(1,nameOfReceiver);
+                                                                                                                ResultSet rsToGetTime = psQueryTime.executeQuery();
+                                                                                                                if(rsToGetTime.next()){
+                                                                                                                    String date = rsToGetTime.getString(1);
+                                                                                                                    JOptionPane.showMessageDialog(null, "Transfer Cash Successfull! \nTransfer Details:\nAmount Transferred: Php" + amount + "\nRecipient's Name: " +nameOfReceiver+"\nAccount ID of Recipient: " + idOfReceiver+"\nTransfer Date: " + date+"\nYour updated balance now is: " + (balanceAmountOfSender-Double.parseDouble(amount)));
+
+                                                                                                                    //update
+                                                                                                                }
+                                                                                                            }catch(Exception e1){
+                                                                                                                e1.printStackTrace();
+                                                                                                            }
+
+                                                                                                            lblAmount.setText("Your current balance is: Php " + amountAfterTransferCash);
+                                                                                                        }
+                                                                                                    }catch(Exception e1){
+                                                                                                        e1.printStackTrace();
+                                                                                                    }
+                                                                                                }
+                                                                                            }catch(Exception e1){
+                                                                                                e1.printStackTrace();
+                                                                                            }
+                                                                                        }catch(Exception e1){
+                                                                                            e1.printStackTrace();
+                                                                                        }
+                                                                                    }
+                                                                                }catch(Exception e1){
+                                                                                    e1.printStackTrace();
+                                                                                }
+
+                                                                            }catch(Exception e1){
+                                                                                e1.printStackTrace();
+                                                                            }
+                                                                        }
+                                                                    }catch(Exception e1){
+                                                                        e1.printStackTrace();
+                                                                    }
+                                                                }
+                                                            }catch(Exception e1){
+                                                                e1.printStackTrace();
+                                                            }
+                                                        }catch(Exception e1){
+                                                            e1.printStackTrace();
+                                                        }
+                                                    }
+                                                    else {
+                                                        JOptionPane.showMessageDialog(null,"Your current balance amount is not enough to transfer your desired amount. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
+                                                        return;
+                                                    }
+                                                }
+                                            }catch(Exception e1){
+                                                e1.printStackTrace();
+                                            }
+                                        }
+                                    }catch(Exception e1){
+                                        e1.printStackTrace();
+                                    }
+
+
+
+
+                                }
+                                else {
+                                    JOptionPane.showMessageDialog(null,"The mobile where to transfer cash does not exists. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
+                                    return;
+                                }
+                            }catch(Exception e1){
+                                e1.printStackTrace();
                             }
                         }
+                        else{
+                            JOptionPane.showMessageDialog(null,"Mobile you have entered is the same as your own mobile. Please proceed with cash in instead. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
 
                     }
+                }catch(Exception e1){
+                    e1.printStackTrace();
                 }
+
+
+
             }
-        }catch (SQLException e1){
-            e1.printStackTrace();
-        }
-        return false;
+        });
     }
+
+
 
     private boolean connectToDatabase(){
         boolean hasRegisteredUser = false;
         final String DB_URL = "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12666768";
         final String USERNAME = "sql12666768";
         final String PASSWORD = "YxDac3ZBu9";
-
-        try(Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
-            User user = new User();
-            lblName.setText("Hello " + user.name+ "!");
-            PreparedStatement preparedStatement = conn.prepareStatement("SELECT id FROM users WHERE name=?");
-            preparedStatement.setString(1, user.name);
-            ResultSet rs = preparedStatement.executeQuery();
-            if(rs.next()==true){
-                int id = rs.getInt(1);
-                System.out.println(id);
-                try{
-                    PreparedStatement pst = conn.prepareStatement("INSERT INTO balance (amount,user_id) VALUES (?,?)");
-                    //INSERT INTO users (email, password, datetime_created) VALUES ("johndoe@gmail.com", "passwordE", "2021-01-01 05:00:00");
-                    pst.setInt(1, id);
-                    pst.executeUpdate();
-
-                }catch (SQLException e1){
+        User user = new User();
+        lblName.setText("Hello " + user.name+ "!");
+        try(Connection conToGetUserId = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+            PreparedStatement psQueryToGetUserId = conToGetUserId.prepareStatement("SELECT id FROM users WHERE name=?");
+            psQueryToGetUserId.setString(1,name);
+            ResultSet rsToGetUserId = psQueryToGetUserId.executeQuery();
+            if(rsToGetUserId.next()){
+                int userId = rsToGetUserId.getInt(1);
+                try(Connection conToGetAmountFromBalanceOfUser = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                    PreparedStatement psQueryToGetAmountFromBalanceOfUser = conToGetAmountFromBalanceOfUser.prepareStatement("SELECT amount FROM balance WHERE user_id=?");
+                    psQueryToGetAmountFromBalanceOfUser.setInt(1, userId);
+                    ResultSet rsToGetAmountFromBalanceOfUser = psQueryToGetAmountFromBalanceOfUser.executeQuery();
+                    if(rsToGetAmountFromBalanceOfUser.next()){
+                        double amount = rsToGetAmountFromBalanceOfUser.getDouble(1);
+                        lblAmount.setText("Your current balance is: Php " + amount);
+                    }
+                }catch(Exception e1){
                     e1.printStackTrace();
-
-                    //lblAmount.setText("Your current balance is: Php " + amount);
                 }
-
             }
-
-
-
-        }catch (Exception e){
-            e.printStackTrace();
+        }catch(Exception e1){
+            e1.printStackTrace();
         }
+
         return hasRegisteredUser;
     }
 
