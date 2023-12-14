@@ -143,57 +143,63 @@ public class RegistrationForm extends JDialog{
             mobile = "09" + mobile;
             Statement stmt = conn.createStatement();
             String sql2 = "INSERT INTO users (name, email, mobile, pin)" + "VALUES (?, ?, ?, ?)";
-            String sql = "SELECT id FROM users WHERE name=?";
+
             PreparedStatement preparedStatement2 = conn.prepareStatement(sql2);
-            PreparedStatement preparedStatement3 = conn.prepareStatement(sql);
+
 
             preparedStatement2.setString(1, name);
             preparedStatement2.setString(2, email);
             preparedStatement2.setString(3, mobile);
             preparedStatement2.setString(4, pin);
-            preparedStatement3.setString(1, name);
 
-            ResultSet rs = preparedStatement3.executeQuery();
+
+
 
             int addedRows = preparedStatement2.executeUpdate();
-            //int rs = preparedStatement3.executeQuery();
+
             if (addedRows > 0) {
                 user = new User();
                 user.name = name;
                 user.email = email;
                 user.mobile = mobile;
                 user.pin = pin;
-            }
-            System.out.println(rs.next());
-            if(rs.next()==true){
-                String amount = "0";
-                int balanceUserId = rs.getInt(1);
-                System.out.println(balanceUserId);
-                try{
-                    //Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-                    PreparedStatement pst = conn.prepareStatement("insert into balance(amount,user_id)" + "values(?,?)");
-                    pst.setString(1, amount);
-                    pst.setInt(2, balanceUserId);
-                    pst.executeUpdate();
-                }catch (SQLException e1){
+                try(Connection conToGetUserId = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                    PreparedStatement psQueryToGetUserId = conToGetUserId.prepareStatement("SELECT id FROM users WHERE name=?");
+                    psQueryToGetUserId.setString(1,name);
+                    ResultSet rsToGetUserId = psQueryToGetUserId.executeQuery();
+                    if(rsToGetUserId.next()){
+                        int userId = rsToGetUserId.getInt(1);
+                        try(Connection conToInsertBalanceForUser = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                            PreparedStatement psQueryToInsertBalanceForUser = conToInsertBalanceForUser.prepareStatement("INSERT INTO balance(amount,user_id) values (?,?)");
+                            psQueryToInsertBalanceForUser.setDouble(1,0);
+                            psQueryToInsertBalanceForUser.setInt(2,userId);
+                            psQueryToInsertBalanceForUser.executeUpdate();
+                        }catch(Exception e1){
+                            e1.printStackTrace();
+                        }
+                    }
+                }catch(Exception e1){
                     e1.printStackTrace();
                 }
             }
 
 
 
+
+
             JOptionPane.showMessageDialog(null, "Registration Success! \nDetails registered are:\nName: " + user.name + "\nEmail: " +user.email+"\nMobile: " + user.mobile);
             registerPanel.setVisible(false);
             dispose();
-            RegistrationForm myform2 = new RegistrationForm(null);
-            stmt.close();
-            conn.close();
+            RegistrationForm myform = new RegistrationForm(null);
+//            stmt.close();
+//            conn.close();
 
         }catch (SQLException e){
             if (e.getErrorCode() == 1062) {
                 JOptionPane.showMessageDialog(this,"Name and/or Email and/or Mobile already registered\nPlease register another Name, Email, and Mobile.", "Try again", JOptionPane.ERROR_MESSAGE);
             }
         }
+
 
         return user;
     }
