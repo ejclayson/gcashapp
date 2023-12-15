@@ -157,7 +157,7 @@ public class DashboardForm extends JFrame{
                 }
 
                 if(mobile.length()!=11){
-                    JOptionPane.showMessageDialog(null,"Mobile requires nine(9) valid set of numbers. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null,"Mobile requires eleven(11) valid set of numbers. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -257,7 +257,7 @@ public class DashboardForm extends JFrame{
                                                                                                                 ResultSet rsToGetTime = psQueryTime.executeQuery();
                                                                                                                 if(rsToGetTime.next()){
                                                                                                                     String date = rsToGetTime.getString(1);
-                                                                                                                    JOptionPane.showMessageDialog(null, "Transfer Cash Successfull! \nTransfer Details:\nAmount Transferred: Php" + amount + "\nRecipient's Name: " +nameOfReceiver+"\nAccount ID of Recipient: " + idOfReceiver+"\nTransfer Date: " + date+"\nYour updated balance now is: " + (balanceAmountOfSender-Double.parseDouble(amount)));
+                                                                                                                    JOptionPane.showMessageDialog(null, "Transfer Cash Successfull! \nTransfer Details:\nAmount Transferred: Php" + amount + "\nRecipient's Name: " +nameOfReceiver+"\nAccount ID of Recipient: " + idOfReceiver+"\nTransfer Date: " + date+"\nYour updated balance now is: Php " + (balanceAmountOfSender-Double.parseDouble(amount)));
 
                                                                                                                     //update
                                                                                                                 }
