@@ -1,5 +1,4 @@
 import javax.swing.*;
-import javax.xml.transform.Result;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,6 +14,11 @@ public class DashboardForm extends JFrame{
     private JLabel lblAmount;
     private JButton cashInButton;
     private JButton cashTransferButton;
+    private JButton viewTransactionButton;
+
+    private JTable table1;
+    private JButton allTransactionsButton;
+    private JButton userSTransactionsButton;
 
     private String name;
 
@@ -24,8 +28,8 @@ public class DashboardForm extends JFrame{
 
         setTitle("Dashboard");
         setContentPane(dashboardPanel);
-        setMinimumSize(new Dimension(500, 429));
-        setSize(450,474);
+        setMinimumSize(new Dimension(450, 500));
+        setSize(450,500);
         setDefaultCloseOperation(JDialog.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -113,6 +117,7 @@ public class DashboardForm extends JFrame{
                                             String amount = rs3.getString(1);
                                             JOptionPane.showMessageDialog(null, "Your current balance is: Php " + amount);
                                             lblAmount.setText("Your current balance is: Php " + amount);
+
                                         }
                                     }
                                 }catch (Exception e2){
@@ -145,6 +150,7 @@ public class DashboardForm extends JFrame{
         cashTransferButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 final String DB_URL = "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12666768";
                 final String USERNAME = "sql12666768";
                 final String PASSWORD = "YxDac3ZBu9";
@@ -336,6 +342,70 @@ public class DashboardForm extends JFrame{
 
             }
         });
+        viewTransactionButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                final String DB_URL = "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12666768";
+                final String USERNAME = "sql12666768";
+                final String PASSWORD = "YxDac3ZBu9";
+
+                String date = JOptionPane.showInputDialog("Please input the particular date you need to track:");
+
+                if(!date.toString().matches("^\\d{4}-\\d{2}-\\d{2} ([0-1]?\\d|2[0-3])(?::([0-5]?\\d))?(?::([0-5]?\\d))?$")){
+                    JOptionPane.showMessageDialog(null,"Please input a valid YYYY-MM-DD HH:MM:SS. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                try(Connection conToQueryIdOfRequester = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                    PreparedStatement psQueryIdOfRequester = conToQueryIdOfRequester.prepareStatement("SELECT id FROM users WHERE name=?");
+                    psQueryIdOfRequester.setString(1, name);
+                    ResultSet rsToQueryIdOfRequester = psQueryIdOfRequester.executeQuery();
+                    if(rsToQueryIdOfRequester.next()){
+                        int idOfRequester = rsToQueryIdOfRequester.getInt(1);
+                        try(Connection conToQueryDateRequested = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);){
+                            PreparedStatement psToQueryDateRequested = conToQueryDateRequested.prepareStatement("SELECT amount,name,account_id,date,transfertoid,transferfromid FROM transaction where date=? AND transferfromid=?");
+                            psToQueryDateRequested.setString(1,date);
+                            psToQueryDateRequested.setInt(2,idOfRequester);
+                            ResultSet rsToQueryDateRequested = psToQueryDateRequested.executeQuery();
+                            if(rsToQueryDateRequested.next()){
+                                double amount = rsToQueryDateRequested.getDouble(1);
+                                String name = rsToQueryDateRequested.getString(2);
+                                int account_id = rsToQueryDateRequested.getInt(3);
+                                String transaction_date = rsToQueryDateRequested.getString(4);
+                                int transfertoid = rsToQueryDateRequested.getInt(5);
+                                int transferfromid = rsToQueryDateRequested.getInt(6);
+                                JOptionPane.showMessageDialog(null, "Transaction Details: Php" + amount + "\nRecipient's Name: " +name+"\nAccount ID of Recipient: " + account_id+"\nTransfer Date: " + transaction_date);
+
+                            }else{
+                                JOptionPane.showMessageDialog(null,"You got no transaction on that particular date you have requested. Thanks.", "Try again", JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
+                        }catch(Exception e1){
+                            e1.printStackTrace();
+                        }
+                    }
+                }catch(Exception e1){
+                    e1.printStackTrace();
+                }
+
+
+            }
+        });
+        allTransactionsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ViewAll myViewAll = new ViewAll(name);
+                myViewAll.setVisible(true);
+            }
+        });
+        userSTransactionsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ViewUsersAll myViewUsersAll = new ViewUsersAll(name);
+                myViewUsersAll.setVisible(true);
+            }
+        });
     }
 
 
@@ -360,6 +430,7 @@ public class DashboardForm extends JFrame{
                     if(rsToGetAmountFromBalanceOfUser.next()){
                         double amount = rsToGetAmountFromBalanceOfUser.getDouble(1);
                         lblAmount.setText("Your current balance is: Php " + amount);
+
                     }
                 }catch(Exception e1){
                     e1.printStackTrace();
@@ -376,7 +447,9 @@ public class DashboardForm extends JFrame{
 
 
     public static void main(String[] args) {
+
         DashboardForm myForm = new DashboardForm("");
+
 
 
     }
